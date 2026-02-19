@@ -1,8 +1,10 @@
 // src/api/axios.ts
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+
 export const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: API_URL,
   withCredentials: true,
   headers: {
     Accept: 'application/json',
@@ -18,8 +20,6 @@ api.interceptors.request.use(
     const token = localStorage.getItem('auth_token');
 
     if (token) {
-      // En Axios v1, headers existe pero puede venir en distintos formatos.
-      // Lo tratamos como objeto simple para el caso común.
       (config.headers as any) = {
         ...(config.headers as any),
         Authorization: `Bearer ${token}`,
