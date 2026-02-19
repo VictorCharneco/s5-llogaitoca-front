@@ -51,7 +51,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
 
     try {
-      // USAMOS getToken() para evitar el "imported but never used"
       const token = getToken();
       const cachedUser = getStoredUser();
 
@@ -59,8 +58,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(cachedUser as User);
         setIsAuthenticated(true);
       } else {
-        // Fallback: si hay token pero no user cacheado
-        // (cuando tengas endpoint /me, aquí sería el sitio para pedirlo)
         const ok = checkAuth();
         setIsAuthenticated(ok);
         if (!ok) setUser(null);
@@ -80,13 +77,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => window.removeEventListener('auth:unauthenticated', handler);
   }, [logout]);
 
+  // ✅ DEV LOGIN (temporal): deja entrar a /app sin backend
   const login = useCallback(
-    async (_email: string, _password: string) => {
-      // TODO: conectar con auth.service.ts cuando tengamos el endpoint real de login
-      // Aquí dejamos el contrato listo para que LoginPage llame useAuth().login()
-      throw new Error('login() not implemented yet');
+    async (email: string, password: string) => {
+      const e = email.trim();
+      const p = password.trim();
+
+      if (!e || !p) throw new Error('Email and password are required');
+
+      setToken('dev-token');
+      setIsAuthenticated(true);
+
+      // Usuario mínimo. Lo casteamos sin @ts-expect-error para evitar warnings.
+      const devUser = { id: 1, name: e, email: e };
+      setUser(devUser as unknown as User);
     },
-    [],
+    [setToken],
   );
 
   const value = useMemo<AuthContextValue>(
