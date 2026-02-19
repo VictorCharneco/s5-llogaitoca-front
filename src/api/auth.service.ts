@@ -12,7 +12,7 @@ import type {
 // ─────────────────────────────────────────────
 
 const TOKEN_KEY = 'auth_token';
-const USER_KEY  = 'auth_user';
+const USER_KEY = 'auth_user';
 
 // ─────────────────────────────────────────────
 //  PERSISTENCE HELPERS
@@ -20,6 +20,10 @@ const USER_KEY  = 'auth_user';
 
 function persistSession(token: string, user: User): void {
   localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+function persistUser(user: User): void {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
@@ -49,6 +53,17 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
 export async function register(payload: RegisterPayload): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>('/api/register', payload);
   persistSession(data.token, data.user);
+  return data;
+}
+
+/**
+ * GET /api/me
+ * Returns the currently authenticated user (Bearer token required).
+ * Also refreshes the cached user in localStorage.
+ */
+export async function me(): Promise<User> {
+  const { data } = await api.get<User>('/api/me');
+  persistUser(data);
   return data;
 }
 

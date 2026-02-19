@@ -13,6 +13,9 @@ import {
   getToken,
   getStoredUser,
   isAuthenticated as checkAuth,
+  login as apiLogin,
+  logout as apiLogout,
+  me as apiMe,
 } from '../api/auth.service';
 import type { User } from '../types';
 
@@ -22,7 +25,7 @@ type AuthContextValue = {
   isLoading: boolean;
   setToken: (token: string | null) => void;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -36,15 +39,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Mantengo esto por compatibilidad: el interceptor de axios lee auth_token
   const setToken = useCallback((token: string | null) => {
     if (token) localStorage.setItem('auth_token', token);
     else localStorage.removeItem('auth_token');
   }, []);
 
-  const logout = useCallback(() => {
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = useCallback(async () => {
+    try {
+      await apiLogout();
+    } finally {
+      // apiLogout ya limpia storage, pero mantenemos estado React consistente
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   }, [setToken]);
 
   const bootstrap = useCallback(async () => {
@@ -55,42 +64,61 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const cachedUser = getStoredUser();
 
       if (token && cachedUser) {
-        setUser(cachedUser as User);
+        setUser(cachedUser);
         setIsAuthenticated(true);
-      } else {
-        const ok = checkAuth();
-        setIsAuthenticated(ok);
-        if (!ok) setUser(null);
+        return;
       }
+
+      // Si hay token pero no hay user cacheado, intentamos /api/me
+      if (token) {
+        try {
+          const me = await apiMe();
+          setUser(me);
+          setIsAuthenticated(true);
+          return;
+        } catch {
+          // Token inválido/expirado o backend no responde: limpiamos estado
+          setUser(null);
+          setIsAuthenticated(false);
+          setToken(null);
+          return;
+        }
+      }
+
+      // Sin token
+      const ok = checkAuth();
+      setIsAuthenticated(ok);
+      if (!ok) setUser(null);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [setToken]);
 
   useEffect(() => {
     bootstrap();
   }, [bootstrap]);
 
   useEffect(() => {
-    const handler = () => logout();
+    const handler = () => {
+      // si axios interceptor dispara auth:unauthenticated, deslogueamos
+      void logout();
+    };
     window.addEventListener('auth:unauthenticated', handler);
     return () => window.removeEventListener('auth:unauthenticated', handler);
   }, [logout]);
 
-  // ✅ DEV LOGIN (temporal): deja entrar a /app sin backend
   const login = useCallback(
     async (email: string, password: string) => {
       const e = email.trim();
       const p = password.trim();
-
       if (!e || !p) throw new Error('Email and password are required');
 
-      setToken('dev-token');
-      setIsAuthenticated(true);
+      const { token, user } = await apiLogin({ email: e, password: p });
 
-      // Usuario mínimo. Lo casteamos sin @ts-expect-error para evitar warnings.
-      const devUser = { id: 1, name: e, email: e };
-      setUser(devUser as unknown as User);
+      // auth.service ya persiste token/user en storage, pero mantenemos el interceptor alineado
+      setToken(token);
+      setUser(user);
+      setIsAuthenticated(true);
     },
     [setToken],
   );
