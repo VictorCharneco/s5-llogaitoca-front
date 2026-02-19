@@ -5,7 +5,8 @@ const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
 export const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
+  // ✅ Token-based auth (Passport). No cookies needed -> avoids CORS wildcard+credentials issue
+  withCredentials: false,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
