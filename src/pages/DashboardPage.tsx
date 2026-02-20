@@ -1,160 +1,163 @@
-// src/pages/DashboardPage.tsx
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { motion, type Variants } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { Guitar, Users, CalendarDays, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import styles from './DashboardPage.module.css';
+
+export const INSTRUMENTS_LAYOUT_ID = 'card-instruments';
+export const INSTRUMENTS_TAG_ID = `${INSTRUMENTS_LAYOUT_ID}-tag`;
+export const INSTRUMENTS_ICON_ID = `${INSTRUMENTS_LAYOUT_ID}-icon`;
+export const INSTRUMENTS_TITLE_ID = `${INSTRUMENTS_LAYOUT_ID}-title`;
+
+const stagger: Variants = {
+  initial: {},
+  animate: { transition: { staggerChildren: 0.09 } },
+};
+
+const fadeUp: Variants = {
+  initial: { opacity: 0, y: 24 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+};
+
+const BLOCKS = [
+  {
+    key: 'instruments',
+    to: '/app/instruments',
+    icon: Guitar,
+    label: 'Instruments',
+    desc: 'Browse the full catalogue of available instruments. Reserve what you need, when you need it.',
+    gradient: 'linear-gradient(135deg, #1a1608 0%, #2e2208 60%, #3a2d0a 100%)',
+    accent: '#d4a847',
+    tag: 'Catalogue',
+  },
+  {
+    key: 'meetings',
+    to: '/app/meetings',
+    icon: Users,
+    label: 'Meetings',
+    desc: 'Create and join rehearsal sessions in one of four dedicated rooms with up to 4 musicians.',
+    gradient: 'linear-gradient(135deg, #0d1520 0%, #0d1f35 60%, #0c2340 100%)',
+    accent: '#5ba3d9',
+    tag: 'Sessions',
+  },
+  {
+    key: 'calendar',
+    to: '/app/calendar',
+    icon: CalendarDays,
+    label: 'Calendar',
+    desc: 'See your upcoming reservations and meetings laid out across the month at a glance.',
+    gradient: 'linear-gradient(135deg, #110d1a 0%, #1c1030 60%, #1e1238 100%)',
+    accent: '#9d6de8',
+    tag: 'Schedule',
+  },
+];
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const [loading, setLoading] = useState(false);
 
-  const email =
-    user && typeof user === 'object' && 'email' in user ? String((user as any).email) : null;
-
-  const onLogout = async () => {
-    setLoading(true);
-    try {
-      await logout();
-      navigate('/login', { replace: true });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <div style={styles.shell}>
-      <header style={styles.header}>
-        <div style={styles.left}>
-          <div style={styles.brand}>LLoga i Toca</div>
-          <div style={styles.sub}>{email ? `Signed in as ${email}` : 'Signed in'}</div>
-        </div>
+    <div className={styles.page}>
+      {/* Hero */}
+      <section className={styles.hero}>
+        <div className={styles.heroNoise} aria-hidden="true" />
+        <motion.div className={styles.heroContent} variants={stagger} initial="initial" animate="animate">
+          <motion.p variants={fadeUp} className={styles.greeting}>
+            {greeting}
+            {user?.name ? `, ${user.name.split('@')[0]}` : ''} —
+          </motion.p>
+          <motion.h1 variants={fadeUp} className={styles.heroTitle}>
+            Your stage
+            <br />
+            awaits.
+          </motion.h1>
+          <motion.p variants={fadeUp} className={styles.heroSub}>
+            Manage your instruments, book rehearsal rooms, and coordinate with your band.
+          </motion.p>
+        </motion.div>
+        <div className={styles.ring} aria-hidden="true" />
+      </section>
 
-        <button
-          onClick={onLogout}
-          disabled={loading}
-          style={{
-            ...styles.logoutBtn,
-            ...(loading ? styles.logoutBtnDisabled : null),
-          }}
+      {/* Feature blocks */}
+      <section className={styles.blocks}>
+        <motion.div
+          className={styles.blocksGrid}
+          variants={stagger}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: '-80px' }}
         >
-          {loading ? 'Signing out…' : 'Logout'}
-        </button>
-      </header>
+          {BLOCKS.map(({ key, to, icon: Icon, label, desc, gradient, accent, tag }) => {
+            // Shared-element ONLY for Instruments
+            if (key === 'instruments') {
+              return (
+                <motion.div key={to} variants={fadeUp}>
+                  <motion.button
+                    type="button"
+                    className={styles.block}
+                    style={{ background: gradient }}
+                    layoutId={INSTRUMENTS_LAYOUT_ID}
+                    onClick={() => navigate(to)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <motion.span
+                      className={styles.blockTag}
+                      style={{ color: accent, borderColor: accent + '33' }}
+                      layoutId={INSTRUMENTS_TAG_ID}
+                    >
+                      {tag}
+                    </motion.span>
 
-      <main style={styles.main}>
-        <h1 style={styles.title}>Dashboard</h1>
-        <p style={styles.text}>
-          Prova de layout per vistes (instruments, calendar, etc.).
-        </p>
+                    <motion.div
+                      className={styles.blockIconWrap}
+                      style={{ background: accent + '18' }}
+                      layoutId={INSTRUMENTS_ICON_ID}
+                    >
+                      <Icon size={22} style={{ color: accent }} aria-hidden="true" />
+                    </motion.div>
 
-        <div style={styles.card}>
-          <div style={styles.cardTitle}>Estado</div>
-          <div style={styles.cardText}>
-            Authenticated: <strong style={styles.strong}>YES</strong>
-          </div>
-          <div style={styles.cardText}>
-            API: <code style={styles.code}>{import.meta.env.VITE_API_URL}</code>
-          </div>
-        </div>
-      </main>
+                    <motion.h2 className={styles.blockTitle} layoutId={INSTRUMENTS_TITLE_ID}>
+                      {label}
+                    </motion.h2>
+
+                    <p className={styles.blockDesc}>{desc}</p>
+                    <span className={styles.blockCta} style={{ color: accent }}>
+                      Explore <ArrowRight size={14} />
+                    </span>
+                  </motion.button>
+                </motion.div>
+              );
+            }
+
+            // Normal links for the rest
+            return (
+              <motion.div key={to} variants={fadeUp}>
+                <Link to={to} className={styles.block} style={{ background: gradient }}>
+                  <span className={styles.blockTag} style={{ color: accent, borderColor: accent + '33' }}>
+                    {tag}
+                  </span>
+                  <div className={styles.blockIconWrap} style={{ background: accent + '18' }}>
+                    <Icon size={22} style={{ color: accent }} aria-hidden="true" />
+                  </div>
+                  <h2 className={styles.blockTitle}>{label}</h2>
+                  <p className={styles.blockDesc}>{desc}</p>
+                  <span className={styles.blockCta} style={{ color: accent }}>
+                    Explore <ArrowRight size={14} />
+                  </span>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      </section>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  shell: {
-    minHeight: '100vh',
-    background: '#f4f5f7',
-    color: '#0b0b0c',
-  },
-  header: {
-    height: 64,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 20px',
-    background: '#ffffff',
-    borderBottom: '1px solid rgba(0,0,0,0.10)',
-  },
-  left: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 2,
-  },
-  brand: {
-    fontWeight: 800,
-    letterSpacing: -0.3,
-    color: '#0b0b0c',
-    fontSize: 16,
-    lineHeight: '18px',
-  },
-  sub: {
-    fontSize: 12,
-    color: '#374151',
-    lineHeight: '14px',
-  },
-  logoutBtn: {
-    height: 38,
-    padding: '0 14px',
-    borderRadius: 10,
-    border: '1px solid rgba(0,0,0,0.18)',
-    background: '#0b0b0c',
-    color: '#ffffff',
-    cursor: 'pointer',
-    fontWeight: 700,
-    fontSize: 13,
-    lineHeight: '38px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoutBtnDisabled: {
-    opacity: 0.7,
-    cursor: 'not-allowed',
-  },
-  main: {
-    maxWidth: 920,
-    margin: '0 auto',
-    padding: '28px 20px',
-  },
-  title: {
-    margin: 0,
-    fontSize: 30,
-    letterSpacing: -0.5,
-    color: '#0b0b0c',
-  },
-  text: {
-    marginTop: 10,
-    color: '#111827',
-    opacity: 0.85,
-    fontSize: 14,
-    lineHeight: 1.6,
-  },
-  card: {
-    marginTop: 18,
-    background: '#fff',
-    border: '1px solid rgba(0,0,0,0.10)',
-    borderRadius: 14,
-    padding: 16,
-    boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
-  },
-  cardTitle: {
-    fontWeight: 800,
-    marginBottom: 8,
-  },
-  cardText: {
-    color: '#111827',
-    opacity: 0.9,
-    marginTop: 6,
-    fontSize: 13,
-  },
-  strong: {
-    color: '#0b0b0c',
-  },
-  code: {
-    background: 'rgba(0,0,0,0.06)',
-    padding: '2px 6px',
-    borderRadius: 8,
-    fontSize: 12,
-  },
-};
