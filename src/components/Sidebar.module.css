@@ -1,0 +1,117 @@
+/* ── shared base ─────────────────────────────── */
+.dock,
+.drawer {
+  width: var(--sidebar-w, 240px);
+  background: var(--surface, #17171c);
+  border-right: 1px solid var(--border, rgba(255,255,255,0.07));
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px;
+  gap: 8px;
+}
+
+/* ── desktop dock ───────────────────────────── */
+.dock {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 30;
+}
+
+/* ── mobile drawer ──────────────────────────── */
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 50;
+  box-shadow: 4px 0 40px rgba(0,0,0,0.5);
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted, #7a7a85);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.closeBtn:hover { background: rgba(255,255,255,0.07); color: var(--text, #f0efe8); }
+.closeBtn:focus-visible { outline: 2px solid var(--accent, #d4a847); outline-offset: 2px; }
+
+/* ── brand ──────────────────────────────────── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 16px;
+}
+
+.brandMark {
+  font-size: 22px;
+  color: var(--accent, #d4a847);
+  line-height: 1;
+}
+
+.brandName {
+  font-family: var(--font-display, 'Playfair Display', serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text, #f0efe8);
+  letter-spacing: -0.3px;
+}
+
+/* ── nav list ───────────────────────────────── */
+.navList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted, #7a7a85);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.navLink:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text, #f0efe8);
+}
+.navLink:focus-visible {
+  outline: 2px solid var(--accent, #d4a847);
+  outline-offset: 2px;
+}
+
+.active {
+  background: var(--accent-dim, rgba(212,168,71,0.12));
+  color: var(--accent, #d4a847) !important;
+}
+.active svg { color: var(--accent, #d4a847); }
+
+/* ── hide dock on mobile ────────────────────── */
+@media (max-width: 768px) {
+  .dock { display: none; }
+}
