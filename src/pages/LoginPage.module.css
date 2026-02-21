@@ -7,7 +7,7 @@
 .page {
   position: relative;
   min-height: 100dvh;
-  width: 100%;
+  width: 100vw;
   display: flex;
   align-items: stretch;
   background: var(--bg, #0e0e11);
