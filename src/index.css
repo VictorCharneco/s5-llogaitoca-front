@@ -54,6 +54,49 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* ---- FullCalendar dark tune ---- */
+.fc {
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: rgba(255,255,255,0.06);
+  --fc-border-color: rgba(255,255,255,0.10);
+  --fc-today-bg-color: rgba(212,168,71,0.10);
+  --fc-list-event-hover-bg-color: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+}
+
+.fc .fc-toolbar-title {
+  font-weight: 800;
+}
+
+.fc .fc-button {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.92);
+  border-radius: 10px;
+}
+
+.fc .fc-button:hover {
+  background: rgba(255,255,255,0.10);
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: rgba(157,109,232,0.22);
+  border-color: rgba(157,109,232,0.35);
+}
+
+.fc .fc-daygrid-day-number,
+.fc .fc-col-header-cell-cushion {
+  color: rgba(255,255,255,0.85);
+}
+
+.fc a {
+  color: inherit;
+  text-decoration: none;
+}
+
+
+
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -66,3 +109,4 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
