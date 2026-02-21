@@ -1,13 +1,21 @@
 import { NavLink } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutDashboard, Guitar, Users, CalendarDays, X } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Guitar,
+  Users,
+  CalendarDays,
+  ClipboardList,
+  X,
+} from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 const NAV = [
-  { to: '/app',             label: 'Dashboard',   icon: LayoutDashboard, end: true },
+  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/app/instruments', label: 'Instruments', icon: Guitar },
-  { to: '/app/meetings',    label: 'Meetings',    icon: Users },
-  { to: '/app/calendar',    label: 'Calendar',    icon: CalendarDays },
+  { to: '/app/reservations', label: 'Reservations', icon: ClipboardList },
+  { to: '/app/meetings', label: 'Meetings', icon: Users },
+  { to: '/app/calendar', label: 'Calendar', icon: CalendarDays },
 ];
 
 interface SidebarProps {
@@ -41,7 +49,7 @@ function NavItems() {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
-      {/* ── Desktop dock (always visible ≥769px) ── */}
+      {/* Desktop dock */}
       <aside className={styles.dock} aria-label="Sidebar navigation">
         <div className={styles.brand}>
           <span className={styles.brandMark}>♩</span>
@@ -50,7 +58,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <NavItems />
       </aside>
 
-      {/* ── Mobile drawer ──────────────────────── */}
+      {/* Mobile drawer */}
       <AnimatePresence>
         {isOpen && (
           <motion.aside
@@ -72,6 +80,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className={styles.closeBtn}
                 onClick={onClose}
                 aria-label="Close navigation"
+                type="button"
               >
                 <X size={18} />
               </button>
