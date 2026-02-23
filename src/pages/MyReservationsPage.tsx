@@ -1,7 +1,6 @@
 import { motion, type Variants } from 'framer-motion';
 import { CalendarDays, RefreshCcw } from 'lucide-react';
 import { useMyReservations } from '../hooks/useReservations';
-import { instrumentImageUrl } from '../api/instruments.service';
 import styles from './MyReservationsPage.module.css';
 
 const stagger: Variants = {
@@ -10,8 +9,13 @@ const stagger: Variants = {
 };
 
 const fadeUp: Variants = {
-  initial: { opacity: 0, y: 14 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.28 } },
+  initial: { opacity: 0, y: 14, filter: 'blur(6px)' },
+  animate: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 0.28 },
+  },
 };
 
 export default function MyReservationsPage() {
@@ -23,9 +27,15 @@ export default function MyReservationsPage() {
       <section className={styles.hero}>
         <div className={styles.noise} aria-hidden="true" />
         <motion.div className={styles.heroContent} variants={stagger} initial="initial" animate="animate">
-          <motion.p variants={fadeUp} className={styles.eyebrow}>Your</motion.p>
-          <motion.h1 variants={fadeUp} className={styles.title}>Reservations</motion.h1>
-          <motion.p variants={fadeUp} className={styles.sub}>Everything you booked, in one place.</motion.p>
+          <motion.p variants={fadeUp} className={styles.eyebrow}>
+            Your
+          </motion.p>
+          <motion.h1 variants={fadeUp} className={styles.title}>
+            Reservations
+          </motion.h1>
+          <motion.p variants={fadeUp} className={styles.sub}>
+            Everything you booked, in one place.
+          </motion.p>
         </motion.div>
       </section>
 
@@ -64,18 +74,22 @@ export default function MyReservationsPage() {
         {!isLoading && !isError && items.length > 0 && (
           <motion.div className={styles.grid} variants={stagger} initial="initial" animate="animate">
             {items.map((r) => {
-              const imgUrl = instrumentImageUrl(r.instrument?.image_path ?? null);
+              const imgUrl = r.instrument?.image_url ?? null;
+
               return (
                 <motion.article key={r.id} className={styles.card} variants={fadeUp}>
                   <div className={styles.media}>
-                    {imgUrl ? <img src={imgUrl} alt={r.instrument.name} /> : <div className={styles.fallback} />}
+                    {imgUrl ? <img src={imgUrl} alt={r.instrument?.name ?? 'Instrument'} /> : <div className={styles.fallback} />}
                   </div>
+
                   <div className={styles.body}>
-                    <div className={styles.name}>{r.instrument.name}</div>
+                    <div className={styles.name}>{r.instrument?.name ?? 'Instrument'}</div>
                     <div className={styles.dates}>
                       {r.start_date} → {r.end_date}
                     </div>
-                    <div className={styles.badge} data-status={r.status}>{r.status}</div>
+                    <div className={styles.badge} data-status={r.status}>
+                      {r.status}
+                    </div>
                   </div>
                 </motion.article>
               );

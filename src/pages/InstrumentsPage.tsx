@@ -6,7 +6,6 @@ import { Guitar, AlertTriangle, RefreshCcw, X, CheckCircle2 } from 'lucide-react
 
 import { useInstruments, useReserveInstrument } from '../hooks/useInstruments';
 import type { Instrument } from '../types';
-import { instrumentImageUrl } from '../api/instruments.service';
 
 import styles from './InstrumentsPage.module.css';
 
@@ -155,7 +154,7 @@ export default function InstrumentsPage() {
         {!isLoading && !isError && items.length > 0 && (
           <motion.div className={styles.grid} variants={stagger} initial="initial" animate="animate">
             {items.map((ins) => {
-              const imgUrl = instrumentImageUrl(ins.image_path);
+              const imgUrl = ins.image_url?.replace("http://127.0.0.1:8000", "http://localhost:8000") ?? null;
               const failed = Boolean(imgError[ins.id]);
               const canReserve = ins.status === 'AVAILABLE';
 

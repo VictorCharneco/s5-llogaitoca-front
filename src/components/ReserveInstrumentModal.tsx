@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion, type Variants } from 'framer-motion';
-import { X, CalendarDays, AlertTriangle } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { X, CalendarDays, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import type { Instrument } from '../types';
-import { instrumentImageUrl } from '../api/instruments.service';
 import styles from './ReserveInstrumentModal.module.css';
+
+type ReservePayload = { start_date: string; end_date: string };
 
 type Props = {
   isOpen: boolean;
@@ -12,32 +13,11 @@ type Props = {
   isSubmitting?: boolean;
   errorMessage?: string | null;
   onClose: () => void;
-  onConfirm: (payload: { start_date: string; end_date: string }) => void;
-};
-
-const overlayV: Variants = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1, transition: { duration: 0.18 } },
-  exit: { opacity: 0, transition: { duration: 0.14 } },
-};
-
-const panelV: Variants = {
-  initial: { opacity: 0, y: 18, scale: 0.98 },
-  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.22 } },
-  exit: { opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.16 } },
+  onConfirm: (payload: ReservePayload) => void;
 };
 
 function todayISO() {
   const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function addDaysISO(days: number) {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
@@ -52,27 +32,22 @@ export default function ReserveInstrumentModal({
   onClose,
   onConfirm,
 }: Props) {
-  const [mounted, setMounted] = useState(false);
+  const root = document.getElementById('root');
 
-  // defaults “sensatos”
-  const defaultStart = useMemo(() => todayISO(), []);
-  const defaultEnd = useMemo(() => addDaysISO(2), []);
+  const [start_date, setStart] = useState('');
+  const [end_date, setEnd] = useState('');
+  const [localError, setLocalError] = useState<string>('');
 
-  const [start_date, setStartDate] = useState(defaultStart);
-  const [end_date, setEndDate] = useState(defaultEnd);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // reset form cada vez que se abre / cambia instrumento
+  // reset values al abrir
   useEffect(() => {
     if (!isOpen) return;
-    setStartDate(defaultStart);
-    setEndDate(defaultEnd);
-  }, [isOpen, instrument?.id, defaultStart, defaultEnd]);
+    const t = todayISO();
+    setStart(t);
+    setEnd(t);
+    setLocalError('');
+  }, [isOpen, instrument?.id]);
 
-  // ESC para cerrar
+  // ESC close
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -84,15 +59,23 @@ export default function ReserveInstrumentModal({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    setLocalError('');
+
+    if (!start_date || !end_date) {
+      setLocalError('Start and end dates are required.');
+      return;
+    }
+    if (end_date < start_date) {
+      setLocalError('End date must be after start date.');
+      return;
+    }
+
     onConfirm({ start_date, end_date });
   };
 
-  if (!mounted) return null;
-
-  const root = document.getElementById('root');
   if (!root) return null;
 
-  const imgUrl = instrument ? instrumentImageUrl(instrument.image_path) : null;
+  const imgUrl = instrument?.image_url ?? null;
 
   return createPortal(
     <AnimatePresence>
@@ -100,24 +83,23 @@ export default function ReserveInstrumentModal({
         <>
           <motion.div
             className={styles.overlay}
-            variants={overlayV}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.16 } }}
+            exit={{ opacity: 0, transition: { duration: 0.12 } }}
             onClick={onClose}
             aria-hidden="true"
           />
 
-          <motion.div className={styles.wrap} aria-hidden={false}>
+          <motion.div className={styles.wrap}>
             <motion.div
               className={styles.panel}
-              variants={panelV}
-              initial="initial"
-              animate="animate"
-              exit="exit"
+              initial={{ opacity: 0, y: 14, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.18 } }}
+              exit={{ opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.14 } }}
               role="dialog"
               aria-modal="true"
               aria-label="Reserve instrument"
+              onClick={(e) => e.stopPropagation()}
             >
               <div className={styles.header}>
                 <div className={styles.headerLeft}>
@@ -126,44 +108,72 @@ export default function ReserveInstrumentModal({
                   </div>
                   <div>
                     <div className={styles.title}>Reserve</div>
-                    <div className={styles.subtitle}>Choose your dates</div>
+                    <div className={styles.subtitle}>{instrument.name}</div>
                   </div>
                 </div>
 
-                <button className={styles.closeBtn} type="button" onClick={onClose} aria-label="Close">
+                <button
+                  className={styles.closeBtn}
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close"
+                  disabled={isSubmitting}
+                >
                   <X size={18} />
                 </button>
               </div>
 
               <div className={styles.body}>
-                <div className={styles.instrumentCard}>
-                  <div className={styles.instrumentMedia}>
+                {/* Preview image (image_url) */}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 12,
+                    alignItems: 'center',
+                    padding: '10px 12px',
+                    borderRadius: 14,
+                    border: '1px solid rgba(255,255,255,.08)',
+                    background: 'rgba(255,255,255,.03)',
+                    marginBottom: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 64,
+                      height: 48,
+                      borderRadius: 12,
+                      overflow: 'hidden',
+                      border: '1px solid rgba(255,255,255,.10)',
+                      background: 'rgba(0,0,0,.18)',
+                      display: 'grid',
+                      placeItems: 'center',
+                      flex: '0 0 auto',
+                    }}
+                  >
                     {imgUrl ? (
-                      <img className={styles.instrumentImg} src={imgUrl} alt={instrument.name} />
+                      <img
+                        src={imgUrl}
+                        alt={instrument.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        loading="lazy"
+                      />
                     ) : (
-                      <div className={styles.instrumentFallback} aria-hidden="true">
-                        {instrument.name.slice(0, 1).toUpperCase()}
-                      </div>
+                      <ImageIcon size={18} aria-hidden="true" />
                     )}
                   </div>
 
-                  <div className={styles.instrumentInfo}>
-                    <div className={styles.instrumentName}>{instrument.name}</div>
-                    <div className={styles.instrumentDesc}>{instrument.description}</div>
-
-                    <div className={styles.pills}>
-                      <span className={styles.pill}>{instrument.type}</span>
-                      <span className={styles.pill} data-status={instrument.status}>
-                        {instrument.status}
-                      </span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 800 }}>{instrument.name}</div>
+                    <div style={{ opacity: 0.75, fontSize: 13, marginTop: 4 }}>
+                      {instrument.type} · {instrument.status}
                     </div>
                   </div>
                 </div>
 
-                {errorMessage && (
+                {(errorMessage || localError) && (
                   <div className={styles.error}>
                     <AlertTriangle size={16} aria-hidden="true" />
-                    <span>{errorMessage}</span>
+                    <span>{localError || errorMessage}</span>
                   </div>
                 )}
 
@@ -174,7 +184,7 @@ export default function ReserveInstrumentModal({
                       <input
                         type="date"
                         value={start_date}
-                        onChange={(e) => setStartDate(e.target.value)}
+                        onChange={(e) => setStart(e.target.value)}
                         disabled={isSubmitting}
                         required
                       />
@@ -185,7 +195,7 @@ export default function ReserveInstrumentModal({
                       <input
                         type="date"
                         value={end_date}
-                        onChange={(e) => setEndDate(e.target.value)}
+                        onChange={(e) => setEnd(e.target.value)}
                         disabled={isSubmitting}
                         required
                       />
@@ -193,17 +203,19 @@ export default function ReserveInstrumentModal({
                   </div>
 
                   <div className={styles.actions}>
-                    <button className={styles.secondaryBtn} type="button" onClick={onClose} disabled={isSubmitting}>
+                    <button
+                      className={styles.secondaryBtn}
+                      type="button"
+                      onClick={onClose}
+                      disabled={isSubmitting}
+                    >
                       Cancel
                     </button>
+
                     <button className={styles.primaryBtn} type="submit" disabled={isSubmitting}>
                       {isSubmitting ? 'Reserving…' : 'Confirm reservation'}
                     </button>
                   </div>
-
-                  <p className={styles.hint}>
-                    Tip: your backend requires <code>start_date</code> and <code>end_date</code>.
-                  </p>
                 </form>
               </div>
             </motion.div>

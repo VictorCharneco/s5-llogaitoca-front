@@ -33,7 +33,7 @@ export interface Instrument {
   description: string;
   type: InstrumentType;
   status: InstrumentStatus;
-  image_path: string | null;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -93,7 +93,7 @@ export interface CreateInstrumentPayload {
   description: string;
   type: InstrumentType;
   status: InstrumentStatus;
-  image_path?: string | null;
+  image_url?: string | null;
 }
 
 export interface UpdateInstrumentPayload extends Partial<CreateInstrumentPayload> {}
