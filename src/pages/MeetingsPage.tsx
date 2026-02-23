@@ -3,10 +3,17 @@ import { motion, type Variants } from 'framer-motion';
 import { Users, AlertTriangle, RefreshCcw } from 'lucide-react';
 
 import MeetingsDetailsModal from '../components/MeetingsDetailsModal';
-import { useMyMeetings, useAllMeetings } from '../hooks/useMeetings';
+import {
+  useMyMeetings,
+  useAllMeetings,
+  useJoinMeeting,
+  useQuitMeeting,
+  useDeleteMeeting,
+  useUpdateMeetingStatus,
+} from '../hooks/useMeetings';
+
 import type { MeetingWithRelations } from '../types';
 import styles from './HeroPage.module.css';
-
 import { useAuth } from '../context/AuthContext';
 
 const stagger: Variants = {
@@ -41,7 +48,7 @@ function MeetingCard({ m }: { m: MeetingWithRelations }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 16 }}>{m.room}</div>
+          <div style={{ fontWeight: 900, fontSize: 16 }}>{m.room}</div>
           <div style={{ opacity: 0.8, marginTop: 4 }}>
             {m.day} · {hhmm(m.start_time)}–{hhmm(m.end_time)}
           </div>
@@ -49,13 +56,13 @@ function MeetingCard({ m }: { m: MeetingWithRelations }) {
 
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 12, opacity: 0.7 }}>Status</div>
-          <div style={{ fontWeight: 800 }}>{m.status}</div>
+          <div style={{ fontWeight: 900 }}>{m.status}</div>
         </div>
       </div>
 
       <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', opacity: 0.85 }}>
         <Users size={16} aria-hidden="true" />
-        <span>{m.users_count ?? 0} participants</span>
+        <span>{(m.users?.length ?? m.users_count ?? 0)} participants</span>
       </div>
     </motion.article>
   );
@@ -73,8 +80,17 @@ export default function MeetingsPage() {
   const active = mode === 'my' ? myQuery : allQuery;
   const items = useMemo(() => active.data ?? [], [active.data]);
 
-  // ✅ Hooks dentro del componente
   const [selected, setSelected] = useState<MeetingWithRelations | null>(null);
+
+  const joinM = useJoinMeeting();
+  const quitM = useQuitMeeting();
+  const delM = useDeleteMeeting();
+  const statusM = useUpdateMeetingStatus();
+
+  const busy = joinM.isPending || quitM.isPending || delM.isPending || statusM.isPending;
+
+  const isMember = Boolean(selected?.users?.some((u) => u.id === user?.id));
+
   const openDetails = (m: MeetingWithRelations) => setSelected(m);
   const closeDetails = () => setSelected(null);
 
@@ -159,7 +175,7 @@ export default function MeetingsPage() {
           >
             <AlertTriangle size={18} aria-hidden="true" />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800 }}>Couldn’t load meetings</div>
+              <div style={{ fontWeight: 900 }}>Couldn’t load meetings</div>
               <div style={{ opacity: 0.85, marginTop: 2 }}>
                 {active.error instanceof Error ? active.error.message : 'Unknown error'}
               </div>
@@ -210,20 +226,17 @@ export default function MeetingsPage() {
         )}
       </section>
 
-      {/* Modal (por ahora solo detalle + close; acciones las metemos en el siguiente paso) */}
       <MeetingsDetailsModal
         isOpen={Boolean(selected)}
         meeting={selected}
-        context={mode}
         isAdmin={isAdmin}
-        // En la vista "my", eres miembro seguro => evita mostrar Join
-        isMember={mode === 'my' ? true : false}
-        busy={false}
+        isMember={isMember}
+        busy={busy}
         onClose={closeDetails}
-        onJoin={() => {}}
-        onQuit={() => {}}
-        onDelete={() => {}}
-        onStatus={() => {}}
+        onJoin={(id) => joinM.mutate(id)}
+        onQuit={(id) => quitM.mutate(id, { onSuccess: closeDetails })}
+        onDelete={(id) => delM.mutate(id, { onSuccess: closeDetails })}
+        onStatus={(id, status) => statusM.mutate({ meetingId: id, status })}
       />
     </div>
   );
