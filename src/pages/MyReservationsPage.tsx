@@ -64,7 +64,7 @@ export default function MyReservationsPage() {
         {!isLoading && !isError && items.length > 0 && (
           <motion.div className={styles.grid} variants={stagger} initial="initial" animate="animate">
             {items.map((r) => {
-              const imgUrl = instrumentImageUrl(r.instrument?.image_path ?? null);
+              const imgUrl = r.instrument?.image_url?.replace("http://127.0.0.1:8000", "http://localhost:8000") ?? null;
               return (
                 <motion.article key={r.id} className={styles.card} variants={fadeUp}>
                   <div className={styles.media}>

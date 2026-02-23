@@ -92,7 +92,7 @@ export default function ReserveInstrumentModal({
   const root = document.getElementById('root');
   if (!root) return null;
 
-  const imgUrl = instrument ? instrumentImageUrl(instrument.image_path) : null;
+  const imgUrl = instrument?.image_url?.replace("http://127.0.0.1:8000", "http://localhost:8000") ?? null;
 
   return createPortal(
     <AnimatePresence>
