@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import { Users, AlertTriangle, RefreshCcw } from 'lucide-react';
 
+import MeetingsDetailsModal from '../components/MeetingsDetailsModal';
 import { useMyMeetings, useAllMeetings } from '../hooks/useMeetings';
 import type { MeetingWithRelations } from '../types';
 import styles from './HeroPage.module.css';
@@ -72,6 +73,11 @@ export default function MeetingsPage() {
   const active = mode === 'my' ? myQuery : allQuery;
   const items = useMemo(() => active.data ?? [], [active.data]);
 
+  // ✅ Hooks dentro del componente
+  const [selected, setSelected] = useState<MeetingWithRelations | null>(null);
+  const openDetails = (m: MeetingWithRelations) => setSelected(m);
+  const closeDetails = () => setSelected(null);
+
   return (
     <div className={styles.page}>
       <section
@@ -97,7 +103,7 @@ export default function MeetingsPage() {
           </motion.h1>
 
           <motion.p variants={fadeUp} className={styles.sub}>
-            View your meetings{isAdmin ? ' (and optionally all meetings)' : ''}. Next step: create/join/quit UI.
+            View your meetings{isAdmin ? ' (and optionally all meetings)' : ''}. Click a card to view details.
           </motion.p>
 
           <motion.div variants={fadeUp} style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -196,11 +202,29 @@ export default function MeetingsPage() {
             }}
           >
             {items.map((m) => (
-              <MeetingCard key={m.id} m={m} />
+              <div key={m.id} onClick={() => openDetails(m)} style={{ cursor: 'pointer' }}>
+                <MeetingCard m={m} />
+              </div>
             ))}
           </motion.div>
         )}
       </section>
+
+      {/* Modal (por ahora solo detalle + close; acciones las metemos en el siguiente paso) */}
+      <MeetingsDetailsModal
+        isOpen={Boolean(selected)}
+        meeting={selected}
+        context={mode}
+        isAdmin={isAdmin}
+        // En la vista "my", eres miembro seguro => evita mostrar Join
+        isMember={mode === 'my' ? true : false}
+        busy={false}
+        onClose={closeDetails}
+        onJoin={() => {}}
+        onQuit={() => {}}
+        onDelete={() => {}}
+        onStatus={() => {}}
+      />
     </div>
   );
 }
