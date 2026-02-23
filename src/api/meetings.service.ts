@@ -1,18 +1,20 @@
+// src/api/meetings.service.ts
 import { api } from './axios';
 import type {
   ApiListResponse,
+  Meeting,
+  MeetingStatus,
   MeetingWithRelations,
+  CreateMeetingPayload,
   MeetingCreateResponse,
   MeetingUpdateStatusResponse,
   MessageResponse,
-  CreateMeetingPayload,
-  MeetingStatus,
 } from '../types';
 
 export const MEETINGS_QUERY_KEY = ['meetings'] as const;
 export const MY_MEETINGS_QUERY_KEY = ['meetings', 'my'] as const;
 
-export async function getMeetings(): Promise<MeetingWithRelations[]> {
+export async function getAllMeetings(): Promise<MeetingWithRelations[]> {
   const { data } = await api.get<ApiListResponse<MeetingWithRelations>>('/api/meetings');
   return data.data;
 }
@@ -27,25 +29,27 @@ export async function createMeeting(payload: CreateMeetingPayload): Promise<Meet
   return data.data;
 }
 
-export async function deleteMeeting(id: number): Promise<MessageResponse> {
-  const { data } = await api.delete<MessageResponse>(`/api/meetings/${id}`);
+export async function joinMeeting(meetingId: number): Promise<MessageResponse> {
+  const { data } = await api.post<MessageResponse>(`/api/meetings/${meetingId}/join`);
   return data;
 }
 
-export async function joinMeeting(id: number): Promise<MessageResponse> {
-  const { data } = await api.post<MessageResponse>(`/api/meetings/${id}/join`);
+export async function quitMeeting(meetingId: number): Promise<MessageResponse> {
+  const { data } = await api.post<MessageResponse>(`/api/meetings/${meetingId}/quit`);
   return data;
 }
 
-export async function quitMeeting(id: number): Promise<MessageResponse> {
-  const { data } = await api.post<MessageResponse>(`/api/meetings/${id}/quit`);
+export async function deleteMeeting(meetingId: number): Promise<MessageResponse> {
+  const { data } = await api.delete<MessageResponse>(`/api/meetings/${meetingId}`);
   return data;
 }
 
 export async function updateMeetingStatus(
-  id: number,
+  meetingId: number,
   status: MeetingStatus,
-): Promise<MeetingUpdateStatusResponse> {
-  const { data } = await api.patch<MeetingUpdateStatusResponse>(`/api/meetings/${id}/status`, { status });
-  return data;
+): Promise<Meeting> {
+  const { data } = await api.patch<MeetingUpdateStatusResponse>(`/api/meetings/${meetingId}/status`, {
+    status,
+  });
+  return data.data;
 }

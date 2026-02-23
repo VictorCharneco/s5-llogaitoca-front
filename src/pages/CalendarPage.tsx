@@ -1,11 +1,24 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
-import type { EventClickArg } from '@fullcalendar/core';
+import interactionPlugin from '@fullcalendar/interaction';
+import type { DateSelectArg, EventClickArg } from '@fullcalendar/core';
+
 import { useMyReservations } from '../hooks/useReservations';
-import { useMyMeetings } from '../hooks/useMeetings';
+import {
+  useMyMeetings,
+  useCreateMeeting,
+  useJoinMeeting,
+  useQuitMeeting,
+  useDeleteMeeting,
+  useUpdateMeetingStatus,
+} from '../hooks/useMeetings';
+
+import CalendarMeetingModal from '../components/CalendarMeetingModal';
+import MeetingsDetailsModal from '../components/MeetingsDetailsModal';
+import { useAuth } from '../context/AuthContext';
+import type { MeetingWithRelations } from '../types';
 
 import styles from './HeroPage.module.css';
 
@@ -18,16 +31,10 @@ type FcEvent = {
   backgroundColor?: string;
   borderColor?: string;
   textColor?: string;
-  extendedProps?: Record<string, unknown>;
+  extendedProps?: Record<string, any>;
 };
 
-function toISODate(date: string) {
-  // backend already provides YYYY-MM-DD; keep as is
-  return date;
-}
-
 function addOneDay(yyyy_mm_dd: string) {
-  // FullCalendar end for allDay events is exclusive, so add +1 day
   const [y, m, d] = yyyy_mm_dd.split('-').map((n) => Number(n));
   const dt = new Date(y, m - 1, d);
   dt.setDate(dt.getDate() + 1);
@@ -37,74 +44,94 @@ function addOneDay(yyyy_mm_dd: string) {
   return `${yy}-${mm}-${dd}`;
 }
 
+function toHHMM(date: Date) {
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
 export default function CalendarPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const reservationsQ = useMyReservations();
   const meetingsQ = useMyMeetings();
+  const createMeetingM = useCreateMeeting();
+
+  const joinM = useJoinMeeting();
+  const quitM = useQuitMeeting();
+  const delM = useDeleteMeeting();
+  const statusM = useUpdateMeetingStatus();
+
+  const busy = joinM.isPending || quitM.isPending || delM.isPending || statusM.isPending;
 
   const isLoading = reservationsQ.isLoading || meetingsQ.isLoading;
   const isError = reservationsQ.isError || meetingsQ.isError;
+
+  // Create modal
+  const [createOpen, setCreateOpen] = useState(false);
+  const [pickedDay, setPickedDay] = useState<string | null>(null);
+  const [pickedStart, setPickedStart] = useState<string | null>(null);
+  const [pickedEnd, setPickedEnd] = useState<string | null>(null);
+
+  // Meeting details modal
+  const [selected, setSelected] = useState<MeetingWithRelations | null>(null);
+  const isMember = Boolean(selected?.users?.some((u) => u.id === user?.id));
+
+  const closeCreate = () => setCreateOpen(false);
+  const closeDetails = () => setSelected(null);
 
   const events = useMemo<FcEvent[]>(() => {
     const res = reservationsQ.data ?? [];
     const meets = meetingsQ.data ?? [];
 
-    const reservationEvents: FcEvent[] = res.map((r) => {
-      const start = toISODate(r.start_date);
-      const endExclusive = addOneDay(toISODate(r.end_date));
+    const reservationEvents: FcEvent[] = res.map((r) => ({
+      id: `res-${r.id}`,
+      title: `🎸 ${r.instrument?.name ?? 'Instrument'}`,
+      start: r.start_date,
+      end: addOneDay(r.end_date),
+      allDay: true,
+      backgroundColor: 'rgba(212,168,71,0.18)',
+      borderColor: 'rgba(212,168,71,0.35)',
+      textColor: 'rgba(255,255,255,0.92)',
+      extendedProps: { kind: 'reservation' },
+    }));
 
-      return {
-        id: `res-${r.id}`,
-        title: `🎸 ${r.instrument.name}`,
-        start,
-        end: endExclusive,
-        allDay: true,
-        backgroundColor: 'rgba(212,168,71,0.18)',
-        borderColor: 'rgba(212,168,71,0.35)',
-        textColor: 'rgba(255,255,255,0.92)',
-        extendedProps: {
-          kind: 'reservation',
-          reservationId: r.id,
-          instrumentId: r.instrument.id,
-          status: r.status,
-        },
-      };
-    });
-
-    const meetingEvents: FcEvent[] = meets.map((m) => {
-      // Meeting has day + start_time/end_time ("HH:MM:SS")
-      const start = `${m.day}T${m.start_time}`;
-      const end = `${m.day}T${m.end_time}`;
-
-      return {
-        id: `meet-${m.id}`,
-        title: `👥 ${m.room}`,
-        start,
-        end,
-        allDay: false,
-        backgroundColor: 'rgba(91,163,217,0.18)',
-        borderColor: 'rgba(91,163,217,0.35)',
-        textColor: 'rgba(255,255,255,0.92)',
-        extendedProps: {
-          kind: 'meeting',
-          meetingId: m.id,
-          room: m.room,
-          status: m.status,
-          usersCount: m.users_count,
-        },
-      };
-    });
+    const meetingEvents: FcEvent[] = meets.map((m) => ({
+      id: `meet-${m.id}`,
+      title: `👥 ${m.room}`,
+      start: `${m.day}T${m.start_time}`,
+      end: `${m.day}T${m.end_time}`,
+      allDay: false,
+      backgroundColor: 'rgba(91,163,217,0.18)',
+      borderColor: 'rgba(91,163,217,0.35)',
+      textColor: 'rgba(255,255,255,0.92)',
+      extendedProps: { kind: 'meeting', meetingId: m.id },
+    }));
 
     return [...reservationEvents, ...meetingEvents];
   }, [reservationsQ.data, meetingsQ.data]);
 
-  const onDateClick = (arg: DateClickArg) => {
-    // Por ahora solo lectura (más adelante: abrir modal crear meeting/reserva)
-    console.log('dateClick', arg.dateStr);
+  const onSelect = (arg: DateSelectArg) => {
+    const day = arg.start.toISOString().slice(0, 10);
+    const start = toHHMM(arg.start);
+    const end = toHHMM(arg.end);
+
+    setPickedDay(day);
+    setPickedStart(arg.allDay ? null : start);
+    setPickedEnd(arg.allDay ? null : end);
+    setCreateOpen(true);
+
+    arg.view.calendar.unselect();
   };
 
   const onEventClick = (arg: EventClickArg) => {
-    // Por ahora solo lectura (más adelante: abrir detalle + acciones)
-    console.log('eventClick', arg.event.id, arg.event.extendedProps);
+    const kind = (arg.event.extendedProps as any)?.kind;
+    if (kind !== 'meeting') return;
+
+    const meetingId = Number((arg.event.extendedProps as any)?.meetingId);
+    const m = (meetingsQ.data ?? []).find((x) => x.id === meetingId) ?? null;
+    setSelected(m);
   };
 
   return (
@@ -121,13 +148,9 @@ export default function CalendarPage() {
           <div className={styles.iconWrap} style={{ background: 'rgba(157,109,232,0.10)' }} aria-hidden="true">
             <span style={{ color: '#9d6de8', fontSize: 22, fontWeight: 900 }}>📅</span>
           </div>
-          <p className={styles.eyebrow} style={{ color: '#9d6de8' }}>
-            Schedule
-          </p>
+          <p className={styles.eyebrow} style={{ color: '#9d6de8' }}>Schedule</p>
           <h1 className={styles.title}>Calendar</h1>
-          <p className={styles.sub}>
-            Your reservations (all-day) + your meetings (time slots).
-          </p>
+          <p className={styles.sub}>Drag a time slot to create a meeting. Click a meeting to join/quit.</p>
         </div>
       </section>
 
@@ -156,23 +179,51 @@ export default function CalendarPage() {
           >
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              initialView="dayGridMonth"
+              initialView="timeGridWeek"
               headerToolbar={{
                 left: 'prev,next today',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay',
+                right: 'timeGridWeek,timeGridDay,dayGridMonth',
               }}
               height="auto"
               events={events}
-              dateClick={onDateClick}
+              selectable
+              selectMirror
+              select={onSelect}
               eventClick={onEventClick}
               nowIndicator
-              weekNumbers={false}
               dayMaxEvents={3}
+              slotMinTime="08:00:00"
+              slotMaxTime="22:00:00"
             />
           </div>
         )}
       </section>
+
+      <CalendarMeetingModal
+        isOpen={createOpen}
+        defaultDay={pickedDay}
+        defaultStart={pickedStart}
+        defaultEnd={pickedEnd}
+        reservations={reservationsQ.data ?? []}
+        isSubmitting={createMeetingM.isPending}
+        errorMessage={createMeetingM.error instanceof Error ? createMeetingM.error.message : null}
+        onClose={closeCreate}
+        onConfirmCreate={(payload) => createMeetingM.mutate(payload, { onSuccess: closeCreate })}
+      />
+
+      <MeetingsDetailsModal
+        isOpen={Boolean(selected)}
+        meeting={selected}
+        isAdmin={isAdmin}
+        isMember={isMember}
+        busy={busy}
+        onClose={closeDetails}
+        onJoin={(id) => joinM.mutate(id)}
+        onQuit={(id) => quitM.mutate(id, { onSuccess: closeDetails })}
+        onDelete={(id) => delM.mutate(id, { onSuccess: closeDetails })}
+        onStatus={(id, status) => statusM.mutate({ meetingId: id, status })}
+      />
     </div>
   );
 }

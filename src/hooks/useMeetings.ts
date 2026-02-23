@@ -1,14 +1,15 @@
+// src/hooks/useMeetings.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateMeetingPayload, MeetingStatus } from '../types';
+import type { MeetingStatus, CreateMeetingPayload } from '../types';
 import {
   MEETINGS_QUERY_KEY,
   MY_MEETINGS_QUERY_KEY,
-  getMeetings,
+  getAllMeetings,
   getMyMeetings,
   createMeeting,
-  deleteMeeting,
   joinMeeting,
   quitMeeting,
+  deleteMeeting,
   updateMeetingStatus,
 } from '../api/meetings.service';
 
@@ -19,10 +20,10 @@ export function useMyMeetings() {
   });
 }
 
-export function useAllMeetings(enabled = false) {
+export function useAllMeetings(enabled: boolean) {
   return useQuery({
     queryKey: MEETINGS_QUERY_KEY,
-    queryFn: getMeetings,
+    queryFn: getAllMeetings,
     enabled,
   });
 }
@@ -43,7 +44,7 @@ export function useCreateMeeting() {
 export function useJoinMeeting() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => joinMeeting(id),
+    mutationFn: (meetingId: number) => joinMeeting(meetingId),
     onSuccess: async () => {
       await Promise.all([
         qc.invalidateQueries({ queryKey: MY_MEETINGS_QUERY_KEY }),
@@ -56,7 +57,7 @@ export function useJoinMeeting() {
 export function useQuitMeeting() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => quitMeeting(id),
+    mutationFn: (meetingId: number) => quitMeeting(meetingId),
     onSuccess: async () => {
       await Promise.all([
         qc.invalidateQueries({ queryKey: MY_MEETINGS_QUERY_KEY }),
@@ -69,7 +70,7 @@ export function useQuitMeeting() {
 export function useDeleteMeeting() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => deleteMeeting(id),
+    mutationFn: (meetingId: number) => deleteMeeting(meetingId),
     onSuccess: async () => {
       await Promise.all([
         qc.invalidateQueries({ queryKey: MY_MEETINGS_QUERY_KEY }),
@@ -82,8 +83,8 @@ export function useDeleteMeeting() {
 export function useUpdateMeetingStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: number; status: MeetingStatus }) =>
-      updateMeetingStatus(id, status),
+    mutationFn: ({ meetingId, status }: { meetingId: number; status: MeetingStatus }) =>
+      updateMeetingStatus(meetingId, status),
     onSuccess: async () => {
       await Promise.all([
         qc.invalidateQueries({ queryKey: MY_MEETINGS_QUERY_KEY }),
