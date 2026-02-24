@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import { Users, AlertTriangle, RefreshCcw } from 'lucide-react';
 
@@ -72,12 +72,19 @@ export default function MeetingsPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
+  // mode solo importa para users; admin siempre "all"
   const [mode, setMode] = useState<'my' | 'all'>('my');
 
-  const myQuery = useMyMeetings();
-  const allQuery = useAllMeetings(isAdmin && mode === 'all');
+  // si el user llega tarde, forzamos admin -> all al cargar
+  useEffect(() => {
+    if (isAdmin) setMode('all');
+  }, [isAdmin]);
 
-  const active = mode === 'my' ? myQuery : allQuery;
+  // ✅ Hooks: se llaman siempre pero con enabled controlado
+  const myQuery = useMyMeetings(!isAdmin && mode === 'my');
+  const allQuery = useAllMeetings(isAdmin ? true : mode === 'all');
+
+  const active = isAdmin ? allQuery : mode === 'my' ? myQuery : allQuery;
   const items = useMemo(() => active.data ?? [], [active.data]);
 
   const [selected, setSelected] = useState<MeetingWithRelations | null>(null);
@@ -88,7 +95,6 @@ export default function MeetingsPage() {
   const statusM = useUpdateMeetingStatus();
 
   const busy = joinM.isPending || quitM.isPending || delM.isPending || statusM.isPending;
-
   const isMember = Boolean(selected?.users?.some((u) => u.id === user?.id));
 
   const openDetails = (m: MeetingWithRelations) => setSelected(m);
@@ -119,41 +125,45 @@ export default function MeetingsPage() {
           </motion.h1>
 
           <motion.p variants={fadeUp} className={styles.sub}>
-            View your meetings{isAdmin ? ' (and optionally all meetings)' : ''}. Click a card to view details.
+            {isAdmin
+              ? 'View all meetings. Click a card to view details.'
+              : 'View your meetings (and optionally all meetings). Click a card to view details.'}
           </motion.p>
 
           <motion.div variants={fadeUp} style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={() => setMode('my')}
-              style={{
-                padding: '10px 12px',
-                borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.10)',
-                background: mode === 'my' ? 'rgba(91,163,217,0.18)' : 'rgba(255,255,255,0.04)',
-                color: 'rgba(255,255,255,0.92)',
-                cursor: 'pointer',
-              }}
-            >
-              My meetings
-            </button>
-
-            {isAdmin && (
+            {/* ✅ User only */}
+            {!isAdmin && (
               <button
                 type="button"
-                onClick={() => setMode('all')}
+                onClick={() => setMode('my')}
                 style={{
                   padding: '10px 12px',
                   borderRadius: 12,
                   border: '1px solid rgba(255,255,255,0.10)',
-                  background: mode === 'all' ? 'rgba(91,163,217,0.18)' : 'rgba(255,255,255,0.04)',
+                  background: mode === 'my' ? 'rgba(91,163,217,0.18)' : 'rgba(255,255,255,0.04)',
                   color: 'rgba(255,255,255,0.92)',
                   cursor: 'pointer',
                 }}
               >
-                All meetings
+                My meetings
               </button>
             )}
+
+            {/* ✅ Admin + user */}
+            <button
+              type="button"
+              onClick={() => setMode('all')}
+              style={{
+                padding: '10px 12px',
+                borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.10)',
+                background: mode === 'all' ? 'rgba(91,163,217,0.18)' : 'rgba(255,255,255,0.04)',
+                color: 'rgba(255,255,255,0.92)',
+                cursor: 'pointer',
+              }}
+            >
+              All meetings
+            </button>
           </motion.div>
         </motion.div>
       </section>

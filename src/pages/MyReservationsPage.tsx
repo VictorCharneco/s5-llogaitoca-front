@@ -14,6 +14,22 @@ import styles from './MyReservationsPage.module.css';
 
 type Tab = 'ACTIVE' | 'FINISHED';
 
+const API_BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
+
+function normalizeAssetUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+
+  let out = url
+    .replace('http://127.0.0.1:8000', API_BASE)
+    .replace('http://localhost:8000', API_BASE)
+    // demo assets live in /demo, not /storage/demo
+    .replace('/storage/demo/', '/demo/');
+
+  if (out.startsWith('http://') || out.startsWith('https://')) return out;
+  if (out.startsWith('/demo/') || out.startsWith('/storage/')) return `${API_BASE}${out}`;
+  return `${API_BASE}/${out.replace(/^\/+/, '')}`;
+}
+
 function statusLabel(status: ReservationWithInstrument['status']) {
   switch (status) {
     case 'ACTIVE':
@@ -44,7 +60,7 @@ function ReservationCard({
   returning: boolean;
   deleting: boolean;
 }) {
-  const img = r.instrument?.image_url ?? null;
+  const img = normalizeAssetUrl(r.instrument?.image_url);
   const canReturn = r.status === 'ACTIVE';
 
   return (
@@ -130,6 +146,9 @@ export default function MyReservationsPage() {
 
   const isAdmin = user.role === 'admin';
 
+  // ✅ NO tocamos la lógica que ya te funcionaba:
+  // - user -> /reservations/my
+  // - admin -> /reservations (all)
   const myQ = useMyReservations(!isAdmin);
   const allQ = useAllReservations(isAdmin);
   const q = isAdmin ? allQ : myQ;
@@ -139,7 +158,7 @@ export default function MyReservationsPage() {
 
   const [tab, setTab] = useState<Tab>('ACTIVE');
 
-  // Snapshot estable de datos
+  // Snapshot estable de datos (para evitar “vacíos” raros al cambiar tabs)
   const [itemsState, setItemsState] = useState<ReservationWithInstrument[]>([]);
   useEffect(() => {
     if (Array.isArray(q.data)) setItemsState(q.data);
@@ -252,7 +271,12 @@ export default function MyReservationsPage() {
               Finished ({finishedItems.length})
             </button>
 
-            <button type="button" onClick={() => navigate('/app/instruments')} className={styles.btn} style={{ marginLeft: 'auto' }}>
+            <button
+              type="button"
+              onClick={() => navigate('/app/instruments')}
+              className={styles.btn}
+              style={{ marginLeft: 'auto' }}
+            >
               Back to instruments
             </button>
           </div>
@@ -312,9 +336,7 @@ export default function MyReservationsPage() {
               <AlertTriangle size={18} aria-hidden="true" />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 900 }}>Couldn’t load reservations</div>
-                <div className={styles.muted}>
-                  {q.error instanceof Error ? q.error.message : 'Unknown error'}
-                </div>
+                <div className={styles.muted}>{q.error instanceof Error ? q.error.message : 'Unknown error'}</div>
               </div>
               <button type="button" onClick={() => q.refetch()} className={styles.btn}>
                 <RefreshCcw size={16} aria-hidden="true" />
