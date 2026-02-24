@@ -526,3 +526,126 @@
   font-size: 13px;
 }
 .helperBtn:hover{ background: rgba(255,255,255,0.09); }
+
+/* ───────────────────────────────────────────────
+   Filters + pagination (frontend)
+─────────────────────────────────────────────── */
+
+.toolbar{
+  margin: 18px 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+
+  padding: 12px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+}
+
+.toolbarLeft{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbarTitle{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 13px;
+  color: rgba(255,255,255,0.88);
+  padding-right: 6px;
+}
+
+.toolbarField{
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+}
+
+.toolbarField select{
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.22);
+  color: rgba(255,255,255,0.92);
+  outline: none;
+}
+
+.toolbarField select:focus{
+  border-color: rgba(212,168,71,0.35);
+  box-shadow: 0 0 0 4px rgba(212,168,71,0.10);
+}
+
+.toolbarBtn{
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.toolbarBtn:hover{ background: rgba(255,255,255,0.10); }
+
+.toolbarRight{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbarCount{
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+}
+
+/* Pagination */
+.pager{
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.pagerBtn{
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.pagerBtn:disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pagerBtn:hover{ background: rgba(255,255,255,0.10); }
+
+.pagerInfo{
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+}
+
+@media (max-width: 520px){
+  .toolbar{ padding: 10px; }
+  .toolbarRight{ width: 100%; justify-content: flex-start; margin-left: 0; }
+}
