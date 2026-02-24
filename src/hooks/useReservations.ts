@@ -7,10 +7,11 @@ import {
   deleteReservation,
 } from '../api/reservations.service';
 
-export function useMyReservations() {
+export function useMyReservations(enabled: boolean = true) {
   return useQuery({
     queryKey: MY_RESERVATIONS_QUERY_KEY,
     queryFn: getMyReservations,
+    enabled,
   });
 }
 
