@@ -13,14 +13,23 @@ import type {
 
 export const MEETINGS_QUERY_KEY = ['meetings'] as const;
 export const MY_MEETINGS_QUERY_KEY = ['meetings', 'my'] as const;
+export const AVAILABLE_MEETINGS_QUERY_KEY = ['meetings', 'available'] as const;
 
+// Admin-only endpoint (backend middleware 'admin')
 export async function getAllMeetings(): Promise<MeetingWithRelations[]> {
   const { data } = await api.get<ApiListResponse<MeetingWithRelations>>('/api/meetings');
   return data.data;
 }
 
+// Meetings where the current user is a participant
 export async function getMyMeetings(): Promise<MeetingWithRelations[]> {
   const { data } = await api.get<ApiListResponse<MeetingWithRelations>>('/api/meetings/my');
+  return data.data;
+}
+
+// ✅ Meetings available to join for normal users
+export async function getAvailableMeetings(): Promise<MeetingWithRelations[]> {
+  const { data } = await api.get<ApiListResponse<MeetingWithRelations>>('/api/meetings/available');
   return data.data;
 }
 

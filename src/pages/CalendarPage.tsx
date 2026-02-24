@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -7,7 +7,7 @@ import type { DateSelectArg, EventClickArg } from '@fullcalendar/core';
 
 import { useMyReservations } from '../hooks/useReservations';
 import {
-  useMyMeetings,
+  useAvailableMeetings,
   useCreateMeeting,
   useJoinMeeting,
   useQuitMeeting,
@@ -37,6 +37,7 @@ type FcEvent = {
 function addOneDay(yyyy_mm_dd: string) {
   const [y, m, d] = yyyy_mm_dd.split('-').map((n) => Number(n));
   const dt = new Date(y, m - 1, d);
+
   dt.setDate(dt.getDate() + 1);
   const yy = dt.getFullYear();
   const mm = String(dt.getMonth() + 1).padStart(2, '0');
@@ -55,7 +56,9 @@ export default function CalendarPage() {
   const isAdmin = user?.role === 'admin';
 
   const reservationsQ = useMyReservations();
-  const meetingsQ = useMyMeetings();
+
+  const meetingsQ = useAvailableMeetings();
+
   const createMeetingM = useCreateMeeting();
 
   const joinM = useJoinMeeting();
@@ -63,7 +66,8 @@ export default function CalendarPage() {
   const delM = useDeleteMeeting();
   const statusM = useUpdateMeetingStatus();
 
-  const busy = joinM.isPending || quitM.isPending || delM.isPending || statusM.isPending;
+  const busy =
+    joinM.isPending || quitM.isPending || delM.isPending || statusM.isPending;
 
   const isLoading = reservationsQ.isLoading || meetingsQ.isLoading;
   const isError = reservationsQ.isError || meetingsQ.isError;
@@ -77,6 +81,15 @@ export default function CalendarPage() {
   // Meeting details modal
   const [selected, setSelected] = useState<MeetingWithRelations | null>(null);
   const isMember = Boolean(selected?.users?.some((u) => u.id === user?.id));
+
+  // ✅ Si cambia la lista (por refetch tras Join/Quit), reengancha "selected" a la versión actualizada
+  useEffect(() => {
+    if (!selected) return;
+    const updated =
+      (meetingsQ.data ?? []).find((m) => m.id === selected.id) ?? null;
+
+    if (updated) setSelected(updated);
+  }, [meetingsQ.data, selected?.id]);
 
   const closeCreate = () => setCreateOpen(false);
   const closeDetails = () => setSelected(null);
@@ -145,12 +158,22 @@ export default function CalendarPage() {
       >
         <div className={styles.noise} aria-hidden="true" />
         <div className={styles.content}>
-          <div className={styles.iconWrap} style={{ background: 'rgba(157,109,232,0.10)' }} aria-hidden="true">
-            <span style={{ color: '#9d6de8', fontSize: 22, fontWeight: 900 }}>📅</span>
+          <div
+            className={styles.iconWrap}
+            style={{ background: 'rgba(157,109,232,0.10)' }}
+            aria-hidden="true"
+          >
+            <span style={{ color: '#9d6de8', fontSize: 22, fontWeight: 900 }}>
+              📅
+            </span>
           </div>
-          <p className={styles.eyebrow} style={{ color: '#9d6de8' }}>Schedule</p>
+          <p className={styles.eyebrow} style={{ color: '#9d6de8' }}>
+            Schedule
+          </p>
           <h1 className={styles.title}>Calendar</h1>
-          <p className={styles.sub}>Drag a time slot to create a meeting. Click a meeting to join/quit.</p>
+          <p className={styles.sub}>
+            Drag a time slot to create a meeting. Click a meeting to join/quit.
+          </p>
         </div>
       </section>
 
@@ -161,8 +184,12 @@ export default function CalendarPage() {
           <div style={{ opacity: 0.9 }}>
             Couldn’t load calendar data.
             <div style={{ opacity: 0.75, marginTop: 6, fontSize: 13 }}>
-              {reservationsQ.error instanceof Error ? reservationsQ.error.message : ''}
-              {meetingsQ.error instanceof Error ? ` ${meetingsQ.error.message}` : ''}
+              {reservationsQ.error instanceof Error
+                ? reservationsQ.error.message
+                : ''}
+              {meetingsQ.error instanceof Error
+                ? ` ${meetingsQ.error.message}`
+                : ''}
             </div>
           </div>
         )}
@@ -207,9 +234,15 @@ export default function CalendarPage() {
         defaultEnd={pickedEnd}
         reservations={reservationsQ.data ?? []}
         isSubmitting={createMeetingM.isPending}
-        errorMessage={createMeetingM.error instanceof Error ? createMeetingM.error.message : null}
+        errorMessage={
+          createMeetingM.error instanceof Error
+            ? createMeetingM.error.message
+            : null
+        }
         onClose={closeCreate}
-        onConfirmCreate={(payload) => createMeetingM.mutate(payload, { onSuccess: closeCreate })}
+        onConfirmCreate={(payload) =>
+          createMeetingM.mutate(payload, { onSuccess: closeCreate })
+        }
       />
 
       <MeetingsDetailsModal
@@ -219,8 +252,20 @@ export default function CalendarPage() {
         isMember={isMember}
         busy={busy}
         onClose={closeDetails}
-        onJoin={(id) => joinM.mutate(id)}
-        onQuit={(id) => quitM.mutate(id, { onSuccess: closeDetails })}
+        onJoin={(id) =>
+          joinM.mutate(id, {
+            onSuccess: () => {
+              void meetingsQ.refetch();
+            },
+          })
+        }
+        onQuit={(id) =>
+          quitM.mutate(id, {
+            onSuccess: () => {
+              void meetingsQ.refetch();
+            },
+          })
+        }
         onDelete={(id) => delM.mutate(id, { onSuccess: closeDetails })}
         onStatus={(id, status) => statusM.mutate({ meetingId: id, status })}
       />
