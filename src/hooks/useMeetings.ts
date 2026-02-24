@@ -4,8 +4,10 @@ import type { MeetingStatus, CreateMeetingPayload } from '../types';
 import {
   MEETINGS_QUERY_KEY,
   MY_MEETINGS_QUERY_KEY,
+  AVAILABLE_MEETINGS_QUERY_KEY,
   getAllMeetings,
   getMyMeetings,
+  getAvailableMeetings,
   createMeeting,
   joinMeeting,
   quitMeeting,
@@ -28,6 +30,14 @@ export function useAllMeetings(enabled: boolean) {
   });
 }
 
+// ✅ Meetings visibles para usuarios normales (joinables)
+export function useAvailableMeetings() {
+  return useQuery({
+    queryKey: AVAILABLE_MEETINGS_QUERY_KEY,
+    queryFn: getAvailableMeetings,
+  });
+}
+
 export function useCreateMeeting() {
   const qc = useQueryClient();
   return useMutation({
@@ -36,6 +46,7 @@ export function useCreateMeeting() {
       await Promise.all([
         qc.invalidateQueries({ queryKey: MY_MEETINGS_QUERY_KEY }),
         qc.invalidateQueries({ queryKey: MEETINGS_QUERY_KEY }),
+        qc.invalidateQueries({ queryKey: AVAILABLE_MEETINGS_QUERY_KEY }),
       ]);
     },
   });
@@ -49,6 +60,7 @@ export function useJoinMeeting() {
       await Promise.all([
         qc.invalidateQueries({ queryKey: MY_MEETINGS_QUERY_KEY }),
         qc.invalidateQueries({ queryKey: MEETINGS_QUERY_KEY }),
+        qc.invalidateQueries({ queryKey: AVAILABLE_MEETINGS_QUERY_KEY }),
       ]);
     },
   });
@@ -62,6 +74,7 @@ export function useQuitMeeting() {
       await Promise.all([
         qc.invalidateQueries({ queryKey: MY_MEETINGS_QUERY_KEY }),
         qc.invalidateQueries({ queryKey: MEETINGS_QUERY_KEY }),
+        qc.invalidateQueries({ queryKey: AVAILABLE_MEETINGS_QUERY_KEY }),
       ]);
     },
   });
@@ -75,6 +88,7 @@ export function useDeleteMeeting() {
       await Promise.all([
         qc.invalidateQueries({ queryKey: MY_MEETINGS_QUERY_KEY }),
         qc.invalidateQueries({ queryKey: MEETINGS_QUERY_KEY }),
+        qc.invalidateQueries({ queryKey: AVAILABLE_MEETINGS_QUERY_KEY }),
       ]);
     },
   });
@@ -89,6 +103,7 @@ export function useUpdateMeetingStatus() {
       await Promise.all([
         qc.invalidateQueries({ queryKey: MY_MEETINGS_QUERY_KEY }),
         qc.invalidateQueries({ queryKey: MEETINGS_QUERY_KEY }),
+        qc.invalidateQueries({ queryKey: AVAILABLE_MEETINGS_QUERY_KEY }),
       ]);
     },
   });
