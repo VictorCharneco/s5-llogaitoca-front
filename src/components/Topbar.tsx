@@ -4,10 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import styles from './Topbar.module.css';
 
 const ROUTE_LABELS: Record<string, string> = {
-  '/app':             'Dashboard',
+  '/app': 'Dashboard',
   '/app/instruments': 'Instruments',
-  '/app/meetings':    'Meetings',
-  '/app/calendar':    'Calendar',
+  '/app/meetings': 'Meetings',
+  '/app/calendar': 'Calendar',
+  '/app/reservations': 'Reservations',
 };
 
 export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
@@ -18,11 +19,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
 
   return (
     <header className={styles.topbar} role="banner">
-      <button
-        className={styles.menuBtn}
-        onClick={onMenuClick}
-        aria-label="Open navigation"
-      >
+      <button className={styles.menuBtn} onClick={onMenuClick} aria-label="Open navigation">
         <Menu size={20} />
       </button>
 
@@ -34,13 +31,10 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
             {user.name}
           </span>
         )}
-        <button
-          className={styles.logoutBtn}
-          onClick={logout}
-          aria-label="Sign out"
-          title="Sign out"
-        >
-          <LogOut size={17} />
+
+        <button className={styles.logoutBtn} onClick={logout} aria-label="Logout" title="Logout">
+          <LogOut size={18} aria-hidden="true" />
+          <span className={styles.logoutText}>Logout</span>
         </button>
       </div>
     </header>
