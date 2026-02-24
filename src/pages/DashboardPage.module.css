@@ -6,7 +6,7 @@
 /* ── Hero ───────────────────────────────────── */
 .hero {
   position: relative;
-  min-height: 32vh;
+  min-height: 28vh;
   display: flex;
   align-items: flex-end;
   padding: 48px 48px 36px;
@@ -77,6 +77,14 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+
+  /* ✅ Todas las cards en desktop con la misma altura por fila */
+  grid-auto-rows: 1fr;
+}
+
+/* ✅ El wrapper de Framer (motion.div) es el item real del grid */
+.blocksGrid > div {
+  height: 100%;
 }
 
 .block {
@@ -91,12 +99,28 @@
               box-shadow 0.22s ease,
               border-color 0.22s ease;
   cursor: pointer;
+
+  /* ✅ Normalización visual para <button> (Instruments) y <a> (Links) */
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background-clip: padding-box;
+  box-sizing: border-box;
+  width: 100%;
+
+  /* ✅ La card ocupa toda la altura del wrapper */
+  height: 100%;
+  min-height: 320px;
 }
+
 .block:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 60px rgba(0,0,0,0.4);
   border-color: rgba(255,255,255,0.12);
 }
+
 .block:focus-visible {
   outline: 2px solid var(--accent, #d4a847);
   outline-offset: 3px;
@@ -152,8 +176,23 @@
 
 /* ── Responsive ──────────────────────────────── */
 @media (max-width: 900px) {
-  .blocksGrid { grid-template-columns: 1fr; }
-  .blocks { padding: 32px 20px 60px; }
+  .blocksGrid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+
+  .blocks {
+    padding: 32px 20px 60px;
+  }
+
+  .blocksGrid > div {
+    height: auto;
+  }
+
+  .block {
+    height: auto;
+    min-height: unset;
+  }
 }
 
 @media (max-width: 640px) {
