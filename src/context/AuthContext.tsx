@@ -14,10 +14,12 @@ import {
   getStoredUser,
   isAuthenticated as checkAuth,
   login as apiLogin,
+  register as apiRegister,
   logout as apiLogout,
   me as apiMe,
 } from '../api/auth.service';
-import type { User } from '../types';
+
+import type { RegisterPayload, User } from '../types';
 
 type AuthContextValue = {
   user: User | null;
@@ -25,6 +27,7 @@ type AuthContextValue = {
   isLoading: boolean;
   setToken: (token: string | null) => void;
   login: (email: string, password: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -123,6 +126,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [setToken],
   );
 
+  const register = useCallback(
+    async (payload: RegisterPayload) => {
+      const { token, user } = await apiRegister(payload);
+
+      // auth.service ya persiste token/user en storage, pero mantenemos el interceptor alineado
+      setToken(token);
+      setUser(user);
+      setIsAuthenticated(true);
+    },
+    [setToken],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -130,9 +145,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isLoading,
       setToken,
       login,
+      register,
       logout,
     }),
-    [user, isAuthenticated, isLoading, setToken, login, logout],
+    [user, isAuthenticated, isLoading, setToken, login, register, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
