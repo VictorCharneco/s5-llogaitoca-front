@@ -6,7 +6,8 @@
 .hero {
   position: relative;
   border-radius: 28px;
-  padding: clamp(26px, 4vw, 44px);
+  min-height: 28vh;
+  padding: clamp(20px, 3vw, 36px) 48px clamp(16px, 2.5vw, 28px);
   background:
     radial-gradient(ellipse 65% 55% at 55% 45%, rgba(212,168,71,0.12) 0%, transparent 68%),
     linear-gradient(180deg, #0e0e11 0%, #111109 100%);

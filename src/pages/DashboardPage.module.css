@@ -6,10 +6,10 @@
 /* ── Hero ───────────────────────────────────── */
 .hero {
   position: relative;
-  min-height: 52vh;
+  min-height: 32vh;
   display: flex;
   align-items: flex-end;
-  padding: 80px 48px 64px;
+  padding: 48px 48px 36px;
   overflow: hidden;
   background:
     radial-gradient(ellipse 70% 60% at 60% 40%, rgba(212,168,71,0.08) 0%, transparent 70%),
@@ -157,6 +157,6 @@
 }
 
 @media (max-width: 640px) {
-  .hero { padding: 60px 20px 48px; min-height: 44vh; }
+  .hero { padding: 36px 20px 28px; min-height: 26vh; }
   .ring { display: none; }
 }
