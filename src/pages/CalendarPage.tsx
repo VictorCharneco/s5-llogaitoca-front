@@ -8,6 +8,7 @@ import type { DateSelectArg, EventClickArg } from '@fullcalendar/core';
 import { useMyReservations } from '../hooks/useReservations';
 import {
   useAvailableMeetings,
+  useAllMeetings,
   useCreateMeeting,
   useJoinMeeting,
   useQuitMeeting,
@@ -55,9 +56,10 @@ export default function CalendarPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
-  const reservationsQ = useMyReservations();
+  const reservationsQ = useMyReservations(!isAdmin);
 
-  const meetingsQ = useAvailableMeetings();
+  // ✅ Admin ve todo (GET /api/meetings). Usuario normal ve joinables (GET /api/meetings/available).
+  const meetingsQ = isAdmin ? useAllMeetings(true) : useAvailableMeetings();
 
   const createMeetingM = useCreateMeeting();
 
@@ -82,12 +84,11 @@ export default function CalendarPage() {
   const [selected, setSelected] = useState<MeetingWithRelations | null>(null);
   const isMember = Boolean(selected?.users?.some((u) => u.id === user?.id));
 
-  // ✅ Si cambia la lista (por refetch tras Join/Quit), reengancha "selected" a la versión actualizada
+  // ✅ Reengancha "selected" a la versión refrescada (tras Join/Quit)
   useEffect(() => {
     if (!selected) return;
     const updated =
       (meetingsQ.data ?? []).find((m) => m.id === selected.id) ?? null;
-
     if (updated) setSelected(updated);
   }, [meetingsQ.data, selected?.id]);
 
