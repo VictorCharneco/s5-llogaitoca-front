@@ -3,6 +3,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import AppShell from '../layouts/AppShell';
 
 import LoginPage from '../pages/LoginPage';
+import RegisterPage from '../pages/RegisterPage';
 import DashboardPage from '../pages/DashboardPage';
 import InstrumentsPage from '../pages/InstrumentsPage';
 import MeetingsPage from '../pages/MeetingsPage';
@@ -14,6 +15,7 @@ export default function AppRouter() {
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
 
       <Route
         path="/app"
