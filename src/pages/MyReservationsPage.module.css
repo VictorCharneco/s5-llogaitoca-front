@@ -166,3 +166,112 @@
   .hero    { padding: 40px 16px 32px; }
   .content { padding: 20px 16px 44px; }
 }
+
+/* =========================================================
+   OVERRIDE — Reservations rows (2 lines, right-aligned meta)
+   Line 1: NAME ............... STATUS
+   Line 2: DATES .............. RETURN
+========================================================= */
+
+.grid{
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+/* Full-width row card */
+.card{
+  width: 100% !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  background: rgba(20,20,24,0.55) !important;
+  overflow: hidden !important;
+}
+
+/* No image */
+.media{ display: none !important; }
+
+/* Body becomes a 2x2 grid */
+.body{
+  padding: 16px 18px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 16px !important;
+  row-gap: 10px !important;
+  align-items: center !important;
+}
+
+/* NAME (row 1 col 1) */
+.name{
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+
+  font-size: 15px !important;
+  font-weight: 850 !important;
+  margin: 0 !important;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* DATES (row 2 col 1) */
+.dates{
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+
+  margin: 0 !important;
+  opacity: 0.72 !important;
+  font-size: 13px !important;
+  white-space: nowrap;
+}
+
+/* STATUS (row 1 col 2) */
+.badge{
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+
+  justify-self: end !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* ACTION WRAPPER = last div inside .body (row 2 col 2) */
+.body > div:last-child{
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+
+  justify-self: end !important;
+  margin-top: 0 !important;
+
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+/* Don’t let .btn add weird left margins here */
+.body > div:last-child .btn{
+  margin-left: 0 !important;
+}
+
+/* Mobile: stack */
+@media (max-width: 820px){
+  .body{
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto auto !important;
+  }
+
+  .badge{
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    justify-self: start !important;
+  }
+
+  .body > div:last-child{
+    grid-column: 1 !important;
+    grid-row: 4 !important;
+    justify-self: start !important;
+  }
+}

@@ -15,14 +15,15 @@ import {
   updateMeetingStatus,
 } from '../api/meetings.service';
 
-export function useMyMeetings() {
+export function useMyMeetings(enabled: boolean = true) {
   return useQuery({
     queryKey: MY_MEETINGS_QUERY_KEY,
     queryFn: getMyMeetings,
+    enabled,
   });
 }
 
-export function useAllMeetings(enabled: boolean) {
+export function useAllMeetings(enabled: boolean = true) {
   return useQuery({
     queryKey: MEETINGS_QUERY_KEY,
     queryFn: getAllMeetings,
@@ -31,10 +32,11 @@ export function useAllMeetings(enabled: boolean) {
 }
 
 // ✅ Meetings visibles para usuarios normales (joinables)
-export function useAvailableMeetings() {
+export function useAvailableMeetings(enabled: boolean = true) {
   return useQuery({
     queryKey: AVAILABLE_MEETINGS_QUERY_KEY,
     queryFn: getAvailableMeetings,
+    enabled,
   });
 }
 
