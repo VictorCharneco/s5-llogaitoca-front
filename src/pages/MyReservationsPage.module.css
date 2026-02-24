@@ -16,7 +16,7 @@
 /* ── Hero — full-bleed, no border-radius/border ─ */
 .hero {
   position: relative;
-  min-height: 44vh;
+  min-height: 28vh;
   flex-shrink: 0;
   display: flex;
   align-items: flex-end;
