@@ -1,7 +1,7 @@
 import { useState, useEffect, useId, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, type Variants } from 'framer-motion';
-import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import styles from './LoginPage.module.css';
 
@@ -23,7 +23,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const emailId    = useId();
+  const emailId = useId();
   const passwordId = useId();
 
   useEffect(() => {
@@ -47,11 +47,10 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       {/* ── Ambient background layers ─────────── */}
-      <div className={styles.bgGlow}  aria-hidden="true" />
+      <div className={styles.bgGlow} aria-hidden="true" />
       <div className={styles.bgNoise} aria-hidden="true" />
 
       <div className={styles.layout}>
-
         {/* ── Left half: editorial hero ─────────── */}
         <div className={styles.hero}>
           <motion.div className={styles.heroInner} initial="initial" animate="animate">
@@ -59,8 +58,10 @@ export default function LoginPage() {
               ♩ Llogaitoca
             </motion.span>
             <motion.h1 custom={1} variants={fadeUp} className={styles.heroTitle}>
-              Every great<br />
-              performance<br />
+              Every great
+              <br />
+              performance
+              <br />
               starts here.
             </motion.h1>
             <motion.p custom={2} variants={fadeUp} className={styles.heroSub}>
@@ -163,10 +164,18 @@ export default function LoginPage() {
                   </>
                 )}
               </button>
+
+              {/* ✅ Register link */}
+              <div className={styles.linksRow}>
+                <span className={styles.linksText}>No account yet?</span>
+                <Link className={styles.registerLink} to="/register">
+                  <UserPlus size={14} aria-hidden="true" />
+                  Create one
+                </Link>
+              </div>
             </form>
           </motion.div>
         </div>
-
       </div>
     </div>
   );

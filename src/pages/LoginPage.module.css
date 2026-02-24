@@ -212,6 +212,53 @@
   background: rgba(224,82,82,0.05);
 }
 
+/* ── Register link row ───────────────────────── */
+.linksRow{
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.linksText{
+  font-size: 13px;
+  color: rgba(255,255,255,0.72);
+}
+
+.registerLink{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 12px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.05);
+
+  color: rgba(255,255,255,0.92);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+
+  transition: background .15s ease, border-color .15s ease, transform .12s ease;
+}
+
+.registerLink:hover{
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.16);
+  transform: translateY(-1px);
+}
+
+.registerLink:active{ transform: translateY(0px); }
+
+.registerLink:focus-visible{
+  outline: 2px solid rgba(212,168,71,0.65);
+  outline-offset: 2px;
+}
+
 /* ── Error box ───────────────────────────────── */
 .errorBox {
   display: flex;
