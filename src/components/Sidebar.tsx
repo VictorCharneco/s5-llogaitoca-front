@@ -11,11 +11,11 @@ import {
 import styles from './Sidebar.module.css';
 
 const NAV = [
-  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/app/instruments', label: 'Instruments', icon: Guitar },
+  { to: '/app',              label: 'Dashboard',   icon: LayoutDashboard, end: true },
+  { to: '/app/instruments',  label: 'Instruments',  icon: Guitar },
   { to: '/app/reservations', label: 'Reservations', icon: ClipboardList },
-  { to: '/app/meetings', label: 'Meetings', icon: Users },
-  { to: '/app/calendar', label: 'Calendar', icon: CalendarDays },
+  { to: '/app/meetings',     label: 'Meetings',     icon: Users },
+  { to: '/app/calendar',     label: 'Calendar',     icon: CalendarDays },
 ];
 
 interface SidebarProps {
@@ -51,11 +51,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {/* Desktop dock */}
       <aside className={styles.dock} aria-label="Sidebar navigation">
+        {/* Brand — same height as Topbar, with matching border-bottom */}
         <div className={styles.brand}>
           <span className={styles.brandMark}>♩</span>
           <span className={styles.brandName}>Llogaitoca</span>
         </div>
-        <NavItems />
+        {/* Nav items in scrollable wrapper */}
+        <div className={styles.nav}>
+          <NavItems />
+        </div>
       </aside>
 
       {/* Mobile drawer */}
@@ -72,7 +76,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             role="dialog"
           >
             <div className={styles.drawerHeader}>
-              <div className={styles.brand}>
+              <div className={styles.brand} style={{ border: 'none', height: 'auto', padding: 0 }}>
                 <span className={styles.brandMark}>♩</span>
                 <span className={styles.brandName}>Llogaitoca</span>
               </div>
@@ -85,7 +89,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <X size={18} />
               </button>
             </div>
-            <NavItems />
+            <div className={styles.nav}>
+              <NavItems />
+            </div>
           </motion.aside>
         )}
       </AnimatePresence>

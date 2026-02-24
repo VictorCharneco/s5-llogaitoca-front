@@ -7,18 +7,36 @@ import type {
 } from '../types';
 
 export const MY_RESERVATIONS_QUERY_KEY = ['reservations', 'my'] as const;
+export const ALL_RESERVATIONS_QUERY_KEY = ['reservations', 'all'] as const;
 
 export async function getMyReservations(): Promise<ReservationWithInstrument[]> {
-  const { data } = await api.get<ApiListResponse<ReservationWithInstrument>>('/api/reservations/my');
+  const { data } = await api.get<ApiListResponse<ReservationWithInstrument>>(
+    '/api/reservations/my',
+  );
   return data.data;
 }
 
-export async function returnReservation(reservationId: number): Promise<MessageResponse> {
-  const { data } = await api.post<MessageResponse>(`/api/reservations/${reservationId}/return`);
+export async function getAllReservations(): Promise<ReservationWithInstrument[]> {
+  const { data } = await api.get<ApiListResponse<ReservationWithInstrument>>(
+    '/api/reservations',
+  );
+  return data.data;
+}
+
+export async function returnReservation(
+  reservationId: number,
+): Promise<MessageResponse> {
+  const { data } = await api.post<MessageResponse>(
+    `/api/reservations/${reservationId}/return`,
+  );
   return data;
 }
 
-export async function deleteReservation(reservationId: number): Promise<MessageResponse> {
-  const { data } = await api.delete<MessageResponse>(`/api/reservations/${reservationId}`);
+export async function deleteReservation(
+  reservationId: number,
+): Promise<MessageResponse> {
+  const { data } = await api.delete<MessageResponse>(
+    `/api/reservations/${reservationId}`,
+  );
   return data;
 }
